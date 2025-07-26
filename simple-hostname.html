@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Hostname Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .hostname {
+            font-size: 2em;
+            font-weight: bold;
+            color: #FFD700;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            border-left: 4px solid #FFD700;
+        }
+
+        .info {
+            font-size: 1.1em;
+            margin: 10px 0;
+            opacity: 0.9;
+        }
+
+        .refresh-btn {
+            background: #FFD700;
+            color: #333;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #FFC107;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🖥️ Simple Hostname Test</h1>
+
+        <div class="info">Current Hostname:</div>
+        <div class="hostname" id="hostname">Loading...</div>
+
+        <div class="info">URL: <span id="url">-</span></div>
+        <div class="info">Updated: <span id="timestamp">-</span></div>
+
+        <button class="refresh-btn" onclick="updateHostname()">🔄 Refresh</button>
+    </div>
+
+    <script>
+        function getMachineHostname() {
+            // Method 1: Get from URL (most reliable for load balancer testing)
+            let hostname = window.location.hostname;
+
+            // If it's localhost or empty, try to get something more unique
+            if (!hostname || hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
+
+                // Method 2: Try to create a machine fingerprint
+                try {
+                    // Get screen resolution and other characteristics
+                    const screen_id = screen.width + 'x' + screen.height + 'x' + screen.colorDepth;
+                    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                    const language = navigator.language;
+                    const platform = navigator.platform || 'unknown';
+
+                    // Create a simple hash from machine characteristics
+                    const machineData = screen_id + '|' + timezone + '|' + language + '|' + platform;
+                    let hash = 0;
+                    for (let i = 0; i < machineData.length; i++) {
+                        const char = machineData.charCodeAt(i);
+                        hash = ((hash << 5) - hash) + char;
+                        hash = hash & hash; // Convert to 32-bit integer
+                    }
+
+                    // Convert to a friendly hostname format
+                    const machineId = Math.abs(hash).toString(16).slice(-6).toUpperCase();
+                    hostname = platform.replace(/\s+/g, '') + '-' + machineId;
+
+                } catch (e) {
+                    // Fallback: Use current time-based ID
+                    hostname = 'Client-' + Date.now().toString(36).slice(-6).toUpperCase();
+                }
+            }
+
+            return hostname;
+        }
+
+        function updateHostname() {
+            const hostname = getMachineHostname();
+
+            document.getElementById('hostname').textContent = hostname;
+            document.getElementById('url').textContent = window.location.href;
+            document.getElementById('timestamp').textContent = new Date().toLocaleString();
+
+            // Add some visual distinction based on hostname
+            const container = document.querySelector('.hostname');
+            const hash = hostname.split('').reduce((a, b) => {
+                a = ((a << 5) - a) + b.charCodeAt(0);
+                return a & a;
+            }, 0);
+            const hue = Math.abs(hash) % 360;
+            container.style.borderLeftColor = `hsl(${hue}, 70%, 50%)`;
+            container.style.boxShadow = `0 0 20px hsla(${hue}, 70%, 50%, 0.3)`;
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', updateHostname);
+
+        // Auto-refresh every 10 seconds
+        setInterval(updateHostname, 10000);
+
+        // Update when URL changes
+        window.addEventListener('popstate', updateHostname);
+        window.addEventListener('hashchange', updateHostname);
+    </script>
+</body>
+
+</html>

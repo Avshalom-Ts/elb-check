@@ -7,9 +7,11 @@
     "start": "node server.js",
     "dev": "node server.js",
     "static": "echo Opening static client-side version && start static-client.html",
+    "simple": "echo Opening simple hostname version && start simple-hostname.html",
     "build": "node build.js",
     "build:iis": "node build.js",
     "build:static": "copy static-client.html build\\index.html",
+    "build:simple": "copy simple-hostname.html build\\index.html",
     "deploy:iis": "powershell -ExecutionPolicy Bypass -File deploy-iis.ps1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

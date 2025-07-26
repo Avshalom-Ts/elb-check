@@ -124,7 +124,6 @@
 
         <div class="method-selector">
             <button class="method-btn active" onclick="setMethod('url')">URL Hostname</button>
-            <button class="method-btn" onclick="setMethod('machine')">Machine ID</button>
             <button class="method-btn" onclick="setMethod('custom')">Custom Server ID</button>
             <button class="method-btn" onclick="setMethod('random')">Random Server ID</button>
         </div>
@@ -161,70 +160,12 @@
         localStorage.setItem('pageLoadCount', pageLoadCount.toString());
 
         function getHostnameFromUrl() {
-            // Try multiple methods to get hostname
-
-            // Method 1: From URL
-            let hostname = window.location.hostname || window.location.host;
-
-            // Method 2: Try to get from navigator (limited but sometimes works)
-            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
-                try {
-                    // This might work in some browsers/environments
-                    if (navigator.userAgentData && navigator.userAgentData.platform) {
-                        hostname = navigator.userAgentData.platform + '-' + Date.now().toString(36).slice(-4);
-                    } else if (navigator.platform) {
-                        hostname = navigator.platform + '-' + Date.now().toString(36).slice(-4);
-                    }
-                } catch (e) {
-                    // Fallback to browser info
-                    hostname = 'Browser-' + navigator.userAgent.split(' ')[0] + '-' + Date.now().toString(36).slice(-4);
-                }
-            }
-
-            // Method 3: If still generic, try to use some browser fingerprinting
-            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                ctx.textBaseline = 'top';
-                ctx.font = '14px Arial';
-                ctx.fillText('Hostname fingerprint', 2, 2);
-                const fingerprint = canvas.toDataURL().slice(-10, -2);
-                hostname = 'Client-' + fingerprint;
-            }
-
-            return hostname || 'Unknown-Client';
+            // Get hostname from current URL
+            return window.location.hostname || window.location.host || 'localhost';
         }
 
         function getCustomServerName() {
-            // Try to get actual hostname using various methods
-            if (customServerName) {
-                return customServerName;
-            }
-
-            // Try to get hostname from environment (works in some contexts)
-            try {
-                // This works in Electron or similar environments
-                if (typeof require !== 'undefined') {
-                    const os = require('os');
-                    return os.hostname();
-                }
-            } catch (e) {
-                // Not available in browser
-            }
-
-            // Fallback: Generate a unique identifier based on browser characteristics
-            const screen_info = screen.width + 'x' + screen.height + 'x' + screen.colorDepth;
-            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-            const language = navigator.language;
-
-            // Create a simple hash from these characteristics
-            const combined = screen_info + timezone + language;
-            const hash = combined.split('').reduce((a, b) => {
-                a = ((a << 5) - a) + b.charCodeAt(0);
-                return a & a;
-            }, 0);
-
-            return 'Machine-' + Math.abs(hash).toString(16).slice(-6);
+            return customServerName || 'Custom-Server-1';
         }
 
         function getRandomServerName() {
@@ -257,7 +198,6 @@
             // Update method description
             const descriptions = {
                 'url': 'This detects the server by extracting the hostname from the current URL. Perfect for load balancer testing where each server has a different hostname/IP.',
-                'machine': 'Attempts to generate a unique machine identifier based on browser characteristics and system information. Creates a consistent ID per machine.',
                 'custom': 'You can set a custom server identifier. This is useful when testing on the same machine with different ports or when you want to manually identify servers.',
                 'random': 'Generates a consistent server name based on the URL. Add #ServerName to the URL to specify a particular server (e.g., #Server-Alpha).'
             };
@@ -265,7 +205,6 @@
             document.getElementById('methodDescription').textContent = descriptions[method];
             document.getElementById('method').textContent = {
                 'url': 'URL-based',
-                'machine': 'Machine ID',
                 'custom': 'Custom ID',
                 'random': 'Random/Hash-based'
             }[method];
@@ -280,11 +219,8 @@
                 case 'url':
                     hostname = getHostnameFromUrl();
                     break;
-                case 'machine':
-                    hostname = getCustomServerName();
-                    break;
                 case 'custom':
-                    hostname = customServerName || 'Custom-Server-1';
+                    hostname = getCustomServerName();
                     break;
                 case 'random':
                     hostname = getRandomServerName();
