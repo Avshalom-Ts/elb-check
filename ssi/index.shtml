@@ -111,7 +111,7 @@
     <div id="server-hostname" style="display: none;"><!--#echo var="COMPUTERNAME" --></div>
     <div id="server-name" style="display: none;"><!--#echo var="SERVER_NAME" --></div>
     <div id="server-addr" style="display: none;"><!--#echo var="LOCAL_ADDR" --></div>
-
+    
     <div class="container">
         <h1>🔄 ELB Load Balancer Test</h1>
 
@@ -208,7 +208,7 @@
         function getHostname() {
             // Try to get the real server hostname using Server-Side Includes
             let hostname = 'Unknown';
-
+            
             // First, try to get from a hidden element that contains server-side info
             const serverHostnameElement = document.getElementById('server-hostname');
             if (serverHostnameElement && serverHostnameElement.textContent.trim() !== '') {
@@ -238,19 +238,19 @@
 
             // Update hostname (main identifier for load balancer testing)
             document.getElementById('hostname').textContent = getHostname();
-
+            
             // Update server-side information
             const serverNameElement = document.getElementById('server-name');
             const serverAddrElement = document.getElementById('server-addr');
-
-            document.getElementById('serverName').textContent =
-                (serverNameElement && serverNameElement.textContent.trim() !== '')
-                    ? serverNameElement.textContent.trim()
+            
+            document.getElementById('serverName').textContent = 
+                (serverNameElement && serverNameElement.textContent.trim() !== '') 
+                    ? serverNameElement.textContent.trim() 
                     : 'Not available (SSI not enabled)';
-
-            document.getElementById('serverIP').textContent =
-                (serverAddrElement && serverAddrElement.textContent.trim() !== '')
-                    ? serverAddrElement.textContent.trim()
+                    
+            document.getElementById('serverIP').textContent = 
+                (serverAddrElement && serverAddrElement.textContent.trim() !== '') 
+                    ? serverAddrElement.textContent.trim() 
                     : 'Not available (SSI not enabled)';
 
             // Update system information
