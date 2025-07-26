@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client-Side Load Balancer Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 40px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .hostname {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #FFD700;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            word-break: break-all;
+        }
+        
+        .info {
+            font-size: 1.2em;
+            margin: 15px 0;
+            opacity: 0.9;
+        }
+        
+        .info-value {
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .refresh-btn {
+            background: #FFD700;
+            color: #333;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #FFC107;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .timestamp {
+            font-size: 0.9em;
+            opacity: 0.7;
+            margin-top: 20px;
+        }
+        
+        .note {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.9em;
+            border-left: 4px solid #FFD700;
+        }
+        
+        .method-selector {
+            margin: 20px 0;
+        }
+        
+        .method-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .method-btn:hover, .method-btn.active {
+            background: #FFD700;
+            color: #333;
+            border-color: #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Client-Side Load Balancer Test</h1>
+        
+        <div class="method-selector">
+            <button class="method-btn active" onclick="setMethod('url')">URL Hostname</button>
+            <button class="method-btn" onclick="setMethod('custom')">Custom Server ID</button>
+            <button class="method-btn" onclick="setMethod('random')">Random Server ID</button>
+        </div>
+        
+        <div class="info">Server Identifier:</div>
+        <div class="hostname" id="hostname">Loading...</div>
+        
+        <div class="info">Detection Method: <span class="info-value" id="method">URL-based</span></div>
+        <div class="info">Current URL: <span class="info-value" id="currentUrl">-</span></div>
+        <div class="info">Page Loads: <span class="info-value" id="pageLoads">1</span></div>
+        
+        <div>
+            <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+            <button class="refresh-btn" onclick="customizeServer()">✏️ Set Custom ID</button>
+        </div>
+        
+        <div class="timestamp" id="timestamp"></div>
+        
+        <div class="note">
+            <strong>💡 How it works:</strong><br>
+            <span id="methodDescription">
+                This detects the server by extracting the hostname from the current URL. 
+                Perfect for load balancer testing where each server has a different hostname/IP.
+            </span>
+        </div>
+    </div>
+
+    <script>
+        let currentMethod = 'url';
+        let pageLoadCount = parseInt(localStorage.getItem('pageLoadCount') || '0') + 1;
+        let customServerName = localStorage.getItem('customServerName') || '';
+        
+        // Save page load count
+        localStorage.setItem('pageLoadCount', pageLoadCount.toString());
+        
+        function getHostnameFromUrl() {
+            // Get hostname from current URL
+            return window.location.hostname || window.location.host || 'localhost';
+        }
+        
+        function getCustomServerName() {
+            return customServerName || 'Custom-Server-1';
+        }
+        
+        function getRandomServerName() {
+            const serverNames = [
+                'Server-Alpha', 'Server-Beta', 'Server-Gamma', 
+                'Server-Delta', 'Server-Echo', 'Server-Foxtrot',
+                'WebServer-01', 'WebServer-02', 'WebServer-03',
+                'LoadBalancer-A', 'LoadBalancer-B', 'LoadBalancer-C'
+            ];
+            
+            // Use URL hash or random if no hash
+            const hash = window.location.hash.slice(1);
+            if (hash && serverNames.includes(hash)) {
+                return hash;
+            }
+            
+            // Pseudo-random based on URL to maintain consistency
+            const urlString = window.location.href;
+            const index = urlString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % serverNames.length;
+            return serverNames[index];
+        }
+        
+        function setMethod(method) {
+            currentMethod = method;
+            
+            // Update active button
+            document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update method description
+            const descriptions = {
+                'url': 'This detects the server by extracting the hostname from the current URL. Perfect for load balancer testing where each server has a different hostname/IP.',
+                'custom': 'You can set a custom server identifier. This is useful when testing on the same machine with different ports or when you want to manually identify servers.',
+                'random': 'Generates a consistent server name based on the URL. Add #ServerName to the URL to specify a particular server (e.g., #Server-Alpha).'
+            };
+            
+            document.getElementById('methodDescription').textContent = descriptions[method];
+            document.getElementById('method').textContent = {
+                'url': 'URL-based',
+                'custom': 'Custom ID',
+                'random': 'Random/Hash-based'
+            }[method];
+            
+            refreshData();
+        }
+        
+        function refreshData() {
+            let hostname;
+            
+            switch(currentMethod) {
+                case 'url':
+                    hostname = getHostnameFromUrl();
+                    break;
+                case 'custom':
+                    hostname = getCustomServerName();
+                    break;
+                case 'random':
+                    hostname = getRandomServerName();
+                    break;
+                default:
+                    hostname = getHostnameFromUrl();
+            }
+            
+            document.getElementById('hostname').textContent = hostname;
+            document.getElementById('currentUrl').textContent = window.location.href;
+            document.getElementById('pageLoads').textContent = pageLoadCount;
+            document.getElementById('timestamp').textContent = `Last updated: ${new Date().toLocaleString()}`;
+        }
+        
+        function customizeServer() {
+            const newName = prompt('Enter custom server identifier:', customServerName);
+            if (newName !== null && newName.trim() !== '') {
+                customServerName = newName.trim();
+                localStorage.setItem('customServerName', customServerName);
+                if (currentMethod === 'custom') {
+                    refreshData();
+                }
+            }
+        }
+        
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            refreshData();
+            
+            // Auto-refresh every 10 seconds
+            setInterval(refreshData, 10000);
+        });
+        
+        // Update when URL changes (for single-page apps)
+        window.addEventListener('popstate', refreshData);
+        window.addEventListener('hashchange', refreshData);
+        
+        // Show different colors based on hostname for visual distinction
+        function updateThemeBasedOnHostname() {
+            const hostname = document.getElementById('hostname').textContent;
+            const hash = hostname.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const hue = hash % 360;
+            
+            document.documentElement.style.setProperty('--dynamic-color', `hsl(${hue}, 70%, 50%)`);
+            document.querySelector('.hostname').style.borderLeft = `4px solid hsl(${hue}, 70%, 50%)`;
+        }
+        
+        // Call theme update after each refresh
+        const originalRefresh = refreshData;
+        refreshData = function() {
+            originalRefresh();
+            setTimeout(updateThemeBasedOnHostname, 100);
+        };
+    </script>
+</body>
+</html>
