@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELB Load Balancer Test - Machine Info</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.1);
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ffd700;
+        }
+
+        .hostname {
+            font-size: 2em;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 10px 0;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+            word-break: break-all;
+        }
+
+        .info-item {
+            margin: 15px 0;
+            font-size: 1.1em;
+        }
+
+        .label {
+            font-weight: bold;
+            color: #ffd700;
+            display: inline-block;
+            width: 180px;
+            text-align: left;
+        }
+
+        .value {
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .timestamp {
+            margin-top: 30px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .warning {
+            background: rgba(255, 193, 7, 0.2);
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔄 ELB Load Balancer Test</h1>
+
+        <div class="warning">
+            ⚠️ Testing Environment - Security features disabled for load balancer testing
+        </div>
+
+        <div class="info-section">
+            <h2>🖥️ Machine Identification</h2>
+            <div class="hostname" id="hostname">Loading...</div>
+        </div>
+
+        <div class="info-section">
+            <h2>📊 System Information</h2>
+            <div class="info-item">
+                <span class="label">Browser:</span>
+                <span class="value" id="browser">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Platform:</span>
+                <span class="value" id="platform">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">User Agent:</span>
+                <span class="value" id="userAgent">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Screen Resolution:</span>
+                <span class="value" id="resolution">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Language:</span>
+                <span class="value" id="language">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Timezone:</span>
+                <span class="value" id="timezone">Loading...</span>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>🌐 Network Information</h2>
+            <div class="info-item">
+                <span class="label">Current URL:</span>
+                <span class="value" id="currentUrl">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Referrer:</span>
+                <span class="value" id="referrer">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Protocol:</span>
+                <span class="value" id="protocol">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Port:</span>
+                <span class="value" id="port">Loading...</span>
+            </div>
+        </div>
+
+        <div class="info-section">
+            <h2>🕒 Session Information</h2>
+            <div class="info-item">
+                <span class="label">Page Load Time:</span>
+                <span class="value" id="loadTime">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Session ID:</span>
+                <span class="value" id="sessionId">Loading...</span>
+            </div>
+            <div class="info-item">
+                <span class="label">Random Number:</span>
+                <span class="value" id="randomNumber">Loading...</span>
+            </div>
+        </div>
+
+        <button class="refresh-btn" onclick="refreshInfo()">🔄 Refresh Information</button>
+
+        <div class="timestamp" id="timestamp">Loading...</div>
+    </div>
+
+    <script>
+        // Generate a unique session ID for this page load
+        const sessionId = 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+        function getHostname() {
+            // Try multiple methods to get hostname/machine identification
+            let hostname = 'Unknown';
+
+            // Method 1: Try to get from location.hostname
+            if (window.location.hostname) {
+                hostname = window.location.hostname;
+            }
+
+            // Method 2: If it's localhost or IP, try to get computer name from navigator
+            if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.match(/^\d+\.\d+\.\d+\.\d+$/)) {
+                // For local testing, create a pseudo-hostname
+                const computerName = 'MACHINE-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+                hostname = computerName + ' (' + hostname + ')';
+            }
+
+            return hostname;
+        }
+
+        function getBrowserInfo() {
+            const ua = navigator.userAgent;
+            if (ua.includes('Chrome')) return 'Chrome';
+            if (ua.includes('Firefox')) return 'Firefox';
+            if (ua.includes('Safari')) return 'Safari';
+            if (ua.includes('Edge')) return 'Edge';
+            if (ua.includes('Opera')) return 'Opera';
+            return 'Unknown Browser';
+        }
+
+        function updateInformation() {
+            const now = new Date();
+
+            // Update hostname (main identifier for load balancer testing)
+            document.getElementById('hostname').textContent = getHostname();
+
+            // Update system information
+            document.getElementById('browser').textContent = getBrowserInfo();
+            document.getElementById('platform').textContent = navigator.platform || 'Unknown';
+            document.getElementById('userAgent').textContent = navigator.userAgent;
+            document.getElementById('resolution').textContent = `${screen.width}x${screen.height}`;
+            document.getElementById('language').textContent = navigator.language || 'Unknown';
+
+            // Update timezone
+            try {
+                document.getElementById('timezone').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            } catch (e) {
+                document.getElementById('timezone').textContent = 'Unknown';
+            }
+
+            // Update network information
+            document.getElementById('currentUrl').textContent = window.location.href;
+            document.getElementById('referrer').textContent = document.referrer || 'None';
+            document.getElementById('protocol').textContent = window.location.protocol;
+            document.getElementById('port').textContent = window.location.port || 'Default';
+
+            // Update session information
+            document.getElementById('loadTime').textContent = now.toLocaleTimeString();
+            document.getElementById('sessionId').textContent = sessionId;
+            document.getElementById('randomNumber').textContent = Math.floor(Math.random() * 1000000);
+
+            // Update timestamp
+            document.getElementById('timestamp').textContent =
+                `Last updated: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+        }
+
+        function refreshInfo() {
+            updateInformation();
+
+            // Add a small animation effect
+            const container = document.querySelector('.container');
+            container.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                container.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        // Auto-refresh every 30 seconds to help with load balancer testing
+        setInterval(updateInformation, 30000);
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', updateInformation);
+
+        // Add keyboard shortcut for refresh (F5 or Ctrl+R will also refresh the page)
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'F5' || (event.ctrlKey && event.key === 'r')) {
+                event.preventDefault();
+                refreshInfo();
+            }
+        });
+
+        console.log('ELB Load Balancer Test Page Loaded');
+        console.log('Session ID:', sessionId);
+        console.log('Hostname:', getHostname());
+    </script>
+</body>
+
+</html>
