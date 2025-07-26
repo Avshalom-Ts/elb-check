@@ -6,6 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "build": "node build.js",
+    "build:iis": "node build.js",
+    "deploy:iis": "powershell -ExecutionPolicy Bypass -File deploy-iis.ps1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [

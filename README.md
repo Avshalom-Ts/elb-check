@@ -18,21 +18,57 @@ A simple static site to test load balancer implementation by displaying server h
 npm install
 ```
 
-### 2. Run Single Server
+### 2. Development Mode (Node.js)
+
+**Run Single Server:**
 
 ```bash
 npm start
 ```
 
-The server will start on port 3000 by default. Visit `http://localhost:3000` to see the site.
-
-### 3. Run Multiple Servers for Load Balancer Testing
+**Run Multiple Servers for Load Balancer Testing:**
 
 ```bash
 node test-multiple-servers.js
 ```
 
-This will start three server instances on ports 3001, 3002, and 3003.
+### 3. Production Deployment (IIS)
+
+**Build for IIS:**
+
+```bash
+npm run build
+```
+
+**Deploy to IIS (Windows):**
+
+**Option A - Automatic (Run as Administrator):**
+
+```bash
+deploy.bat
+```
+
+**Option B - PowerShell (Run as Administrator):**
+
+```powershell
+npm run deploy:iis
+```
+
+**Option C - Manual:**
+
+1. Copy `build` folder contents to IIS website directory
+2. Create IIS Application/Virtual Directory
+3. Install URL Rewrite Module 2.1 if needed
+
+### 4. Multiple IIS Servers for Load Balancer Testing
+
+Deploy to different ports on each server:
+
+```powershell
+.\deploy-iis.ps1 -Port 8081 -SiteName "elb-check-1"
+.\deploy-iis.ps1 -Port 8082 -SiteName "elb-check-2" 
+.\deploy-iis.ps1 -Port 8083 -SiteName "elb-check-3"
+```
 
 ## API Endpoints
 
